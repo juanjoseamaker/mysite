@@ -4,7 +4,7 @@ from .models import Task
 from .forms import TaskForm
 
 def delete(response):
-    return render(response, 'delete.html')
+    return render(response, 'delete_form.html')
 
 def delete_id(request, id):
     if request.method == 'POST':
@@ -12,9 +12,9 @@ def delete_id(request, id):
             item = Task.objects.get(id=int(id))
             item.delete()
         except ValueError:
-            return HttpResponse('Failed to delete task')
+            return HttpResponse('Failed to delete task', status=500)
         except Task.DoesNotExist:
-            return HttpResponse('Failed to delete task, that task does not exist')
+            return HttpResponse('Failed to delete task, task does not exist', status=500)
         return HttpResponseRedirect('/')
 
     return HttpResponseRedirect('/')
@@ -34,30 +34,8 @@ def add(request):
     else:
         form = TaskForm()
 
-    return render(request, 'task.html', {'form': form})
+    return render(request, 'add_form.html', {'form': form})
 
-def index(reponse):
-    page = '''
-        <html>
-        <head><title>MySite</title></head>
-        <body>
-        <h1>Tasks</h1><a href="/add">Add</a> <a href="/delete">Delete</a><br>
-    '''
-
-    tasks = Task.objects.all()
-    for item in tasks.iterator():
-        page += '''
-        <h4>Task #{}</h4>
-        <h4>Title: {}</h4>
-        <h4>Description: {}</h4>
-        <h4>Date: {}</h4>
-        <h4>Complete: {}</h4>
-        <br>
-        '''.format(item.id, item.title, item.description, item.date.isoformat(), item.complete)
-    
-    page += '''
-        </body>
-        </html>
-    '''
-
-    return HttpResponse(page)
+def index(response):
+    tasks = Task.objects.all().order_by('date')
+    return render(response, 'index.html', {'tasks': tasks.iterator()})
